@@ -28,7 +28,7 @@ export default function SettingsForm({ settings, onSettingsUpdate }: SettingsFor
   // Sync formData when settings are loaded (client-side only)
   // Only sync on initial mount, not on every settings update to preserve user input
   const [initialized, setInitialized] = useState(false)
-  
+
   useEffect(() => {
     setMounted(true)
     if (settings && !initialized) {
@@ -182,11 +182,10 @@ export default function SettingsForm({ settings, onSettingsUpdate }: SettingsFor
 
       {message && (
         <div
-          className={`mb-4 p-4 rounded ${
-            message.type === 'success'
+          className={`mb-4 p-4 rounded ${message.type === 'success'
               ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
               : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-          }`}
+            }`}
         >
           {message.text}
         </div>

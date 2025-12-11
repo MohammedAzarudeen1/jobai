@@ -11,19 +11,40 @@ The extension is located in your project folder, but not "packaged" yet. You loa
 
 ## 2. Using the Automation
 1.  Make sure your JobAI app is running (`npm run dev`) at `http://localhost:3000`.
-2.  Go to **LinkedIn** and find a job post you like (e.g., search for "Software Engineer").
-3.  Open the JobAI extension popup (Puzzle piece icon -> JobAI Assistant).
-4.  Click **"Analyze Job"**.
-    *   The extension will scrape the Job Title, Company, Description, and any hidden emails.
-    *   It will open a NEW tab to `localhost:3000` with all the data pre-filled!
-5.  Review the data in JobAI and click **"Preview Application"**.
+2.  **Navigate to LinkedIn** and find a job post.
+3.  Open the JobAI extension.
+4.  **Option A: Analyze Text** (Extracts text/emails directly).
+5.  **Option B: 📸 Screenshot & Analyze** (New!)
+    - Captures the visible screen (useful if scraping is blocked).
+    - Uses OCR to read the text and auto-fills the JobAI form.
+6.  The app will open with your Data Pre-filled!
 
-## 3. Alternative: Search via Dashboard
+**IMPORTANT:** If you update the code, go to `chrome://extensions` and click the **Refresh (Circular Arrow)** icon on JobAI to apply changes.
+
+
+## 3. NEW: ⚡ Fully Automated Auto-Apply (No Extension Needed)
+This feature allows you to search, analyze, and apply to multiple jobs directly from the dashboard without using LinkedIn or the extension manually.
+
+1.  **Configure API Key**:
+    - Add `RAPIDAPI_KEY=your_key_here` to `.env.local`. (Get a key from RapidAPI: LinkedIn Data API).
+    - Without a key, it runs in **Demo Mode**.
+
+2.  **Go to Dashboard**: `http://localhost:3000/dashboard`
+3.  Click the **"⚡ Auto-Apply"** tab.
+4.  **Step 1: Search**:
+    - Enter keywords (e.g., "React Developer") and Location.
+    - Click **"Search Jobs"**. The system will fetch real live jobs from LinkedIn via API.
+5.  **Step 2: Analysis & Apply**:
+    - Click **"🧠 Analyze Matches"** to let AI read your resume and match it against all found jobs!
+    - Click **"⚡ Auto-Apply to X Jobs"** to automatically generate cover letters and send emails to all matched recruiters.
+
+## 4. Alternative: Manual Extension Workflow
 1.  Go to `http://localhost:3000/dashboard`.
 2.  Click the **"Find Jobs"** tab.
 3.  Click **"Search LinkedIn Jobs"** to open a Google Search for jobs.
 4.  Pick a result, then use the Extension as described above!
 
 ## Troubleshooting
-- **Extension doesn't extract?** Make sure you are on a specific Job page (URL usually looks like `linkedin.com/jobs/view/...`).
-- **Data not appearing in JobAI?** Ensure the app is running on port 3000.
+- **Search returns 404/Error?** Check your `RAPIDAPI_KEY` and ensure you are subscribed to the correct API on RapidAPI (LinkedIn Data API).
+- **No emails found?** The API searches the job description for emails. Many posts don't include them. Use the Extension for deeper scraping if needed.
+- **Data not appearing?** Ensure port 3000 is active.

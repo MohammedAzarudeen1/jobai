@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Server Actions are stable in Next.js 15
+  // Packages that should use the server runtime
+  serverExternalPackages: ['tesseract.js', 'pdf2json'],
+
   // Body size limit for API routes and Server Actions
   experimental: {
     serverActions: {

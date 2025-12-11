@@ -17,13 +17,17 @@ export async function uploadToCloudinary(
       {
         folder,
         resource_type: 'raw',
+        type: 'upload', // Ensure public upload type
       },
       (error, result) => {
         if (error) {
           reject(error)
         } else if (result) {
+          // Use secure_url for public delivery
+          const url = result.secure_url || result.url
+          console.log(`✅ Uploaded to Cloudinary: ${url}`)
           resolve({
-            url: result.secure_url,
+            url,
             publicId: result.public_id,
           })
         } else {
@@ -39,6 +43,40 @@ export async function uploadToCloudinary(
   })
 }
 
+export async function fetchFromCloudinary(url: string): Promise<Buffer> {
+  console.log(`📥 Fetching from Cloudinary: ${url.substring(0, 80)}...`)
+  try {
+    // Remove any transformation flags from the URL for fetching (transformations don't apply to raw fetches)
+    let cleanUrl = url.replace(/\/fl_[^\/]+/g, '')
+    
+    // Try fetching without auth first
+    let response = await fetch(cleanUrl)
+    if (response.ok) {
+      return Buffer.from(await response.arrayBuffer())
+    }
+    
+    // If 401/403, try with Cloudinary API auth
+    if (response.status === 401 || response.status === 403) {
+      console.log('⚠️ URL requires auth, attempting with Cloudinary credentials...')
+      const apiUrl = cleanUrl.includes('?') ? `${cleanUrl}&_a=${Date.now()}` : `${cleanUrl}?_a=${Date.now()}`
+      response = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`${process.env.CLOUDINARY_API_KEY}:${process.env.CLOUDINARY_API_SECRET}`).toString('base64')}`,
+        },
+      })
+    }
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch from Cloudinary: ${response.status} ${response.statusText}`)
+    }
+    
+    return Buffer.from(await response.arrayBuffer())
+  } catch (error) {
+    console.error('❌ Error fetching from Cloudinary:', error)
+    throw error
+  }
+}
+
 export async function deleteFromCloudinary(publicId: string): Promise<void> {
   try {
     await cloudinary.uploader.destroy(publicId, {
@@ -47,12 +85,5 @@ export async function deleteFromCloudinary(publicId: string): Promise<void> {
   } catch (error) {
     console.error('Error deleting from Cloudinary:', error)
   }
-}
-
-export async function getCloudinaryUrl(publicId: string): Promise<string> {
-  return cloudinary.url(publicId, {
-    secure: true,
-    resource_type: 'raw',
-  })
 }
 

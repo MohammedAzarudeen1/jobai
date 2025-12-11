@@ -74,3 +74,47 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
         }
     });
 });
+
+document.getElementById('screenshotBtn').addEventListener('click', async () => {
+    const statusEl = document.getElementById('status');
+    statusEl.innerText = 'Capturing Screenshot...';
+
+    try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+        // Capture visible tab
+        const dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'jpeg', quality: 50 });
+
+        statusEl.innerText = 'Processing Image...';
+
+        // Base64 is too long for URL params. We need to pass it differently.
+        // Option 1: Copy to clipboard? No.
+        // Option 2: Post to local server endpoint directly from here.
+
+        statusEl.innerText = 'Sending to JobAI Server...';
+
+        const response = await fetch('http://localhost:3000/api/analyze-screenshot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: dataUrl })
+        });
+
+        if (!response.ok) {
+            throw new Error('Server error');
+        }
+
+        const result = await response.json();
+
+        // Open dashboard with the Result ID (not the full text)
+        const url = `http://localhost:3000/dashboard?analysisId=${result.id}`;
+        chrome.tabs.create({ url });
+
+        statusEl.innerText = '✅ Done! Check Dashboard.';
+
+    } catch (err) {
+        console.error(err);
+        statusEl.innerText = '❌ Error: ' + err.message;
+        statusEl.style.color = 'red';
+    }
+});
+

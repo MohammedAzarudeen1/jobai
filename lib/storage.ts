@@ -11,6 +11,8 @@ export interface UserSettings {
   fromName: string
   resumeUrl?: string
   resumePublicId?: string
+  resumeText?: string
+  resumeTextCachedAt?: Date
 }
 
 export async function getSettings(): Promise<UserSettings | null> {
@@ -42,6 +44,8 @@ export async function getSettings(): Promise<UserSettings | null> {
       fromName: settings.fromName,
       resumeUrl: settings.resumeUrl,
       resumePublicId: settings.resumePublicId,
+      resumeText: settings.resumeText,
+      resumeTextCachedAt: settings.resumeTextCachedAt,
     }
   } catch (error) {
     console.error('Error reading settings:', error)
@@ -72,18 +76,30 @@ export async function saveSettings(settings: UserSettings): Promise<void> {
       encryptedPassword = existing.smtpPassword
     }
     
+    // Check if resume URL changed (new resume uploaded)
+    const resumeUrlChanged = existing?.resumeUrl !== settings.resumeUrl
+    
+    // If resume changed, clear the cache so it will be re-parsed on next preview
+    const updateData: any = {
+      smtpHost: settings.smtpHost,
+      smtpPort: settings.smtpPort,
+      smtpUser: settings.smtpUser,
+      smtpPassword: encryptedPassword,
+      fromEmail: settings.fromEmail,
+      fromName: settings.fromName,
+      resumeUrl: settings.resumeUrl,
+      resumePublicId: settings.resumePublicId,
+    }
+    
+    if (resumeUrlChanged) {
+      console.log('📝 Resume URL changed - clearing cached resume text')
+      updateData.resumeText = ''  // Clear cache
+      updateData.resumeTextCachedAt = null  // Clear timestamp
+    }
+    
     await UserSettings.findOneAndUpdate(
       { userId: 'default' },
-      {
-        smtpHost: settings.smtpHost,
-        smtpPort: settings.smtpPort,
-        smtpUser: settings.smtpUser,
-        smtpPassword: encryptedPassword,
-        fromEmail: settings.fromEmail,
-        fromName: settings.fromName,
-        resumeUrl: settings.resumeUrl,
-        resumePublicId: settings.resumePublicId,
-      },
+      updateData,
       { upsert: true, new: true }
     )
   } catch (error) {
@@ -95,5 +111,22 @@ export async function saveSettings(settings: UserSettings): Promise<void> {
 export async function getResumeUrl(): Promise<string | null> {
   const settings = await getSettings()
   return settings?.resumeUrl || null
+}
+
+export async function cacheResumeText(resumeText: string): Promise<void> {
+  try {
+    await connectDB()
+    await UserSettings.findOneAndUpdate(
+      { userId: 'default' },
+      {
+        resumeText: resumeText,
+        resumeTextCachedAt: new Date(),
+      },
+      { upsert: true, new: true }
+    )
+  } catch (error) {
+    console.error('Error caching resume text:', error)
+    // Don't throw - caching is optional
+  }
 }
 

@@ -123,6 +123,14 @@ export default function JobApplicationForm({ settings, initialData }: JobApplica
       const data = await response.json()
 
       if (data.success) {
+        if (data.resumeTextLength !== undefined && data.resumeTextLength < 100) {
+          setMessage({
+            type: 'error',
+            text: "⚠️ WARNING: We couldn't read the text from your Resume PDF! The AI wrote a generic letter. Please ensure your PDF has selectable text (not a scanned image)."
+          })
+          // Don't return, still show preview, but keep warning visible
+        }
+
         setPreviewData({
           coverLetter: data.coverLetter,
           enhancedResumeUrl: data.enhancedResumeUrl,
@@ -161,6 +169,7 @@ export default function JobApplicationForm({ settings, initialData }: JobApplica
         body: JSON.stringify({
           ...formData,
           coverLetter: previewData.coverLetter,
+          subject: previewData.emailSubject,
           enhancedResumeUrl: previewData.enhancedResumeUrl,
           enhancedResumePublicId: previewData.enhancedResumePublicId,
         }),
@@ -211,8 +220,8 @@ export default function JobApplicationForm({ settings, initialData }: JobApplica
       {message && (
         <div
           className={`mb-4 p-4 rounded ${message.type === 'success'
-              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
             }`}
         >
           {message.text}

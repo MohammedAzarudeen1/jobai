@@ -10,6 +10,8 @@ export interface IUserSettings extends Document {
   fromName: string
   resumeUrl?: string
   resumePublicId?: string
+  resumeText?: string  // Cached resume text to avoid re-parsing
+  resumeTextCachedAt?: Date  // When resume text was last extracted
   createdAt: Date
   updatedAt: Date
 }
@@ -52,6 +54,13 @@ const UserSettingsSchema = new Schema<IUserSettings>(
     },
     resumePublicId: {
       type: String,
+    },
+    resumeText: {
+      type: String,
+      default: '',  // Cached text from resume
+    },
+    resumeTextCachedAt: {
+      type: Date,
     },
   },
   {

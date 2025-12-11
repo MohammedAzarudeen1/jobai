@@ -66,11 +66,18 @@ export default function PreviewModal({
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Enhanced Resume</h3>
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
-              <iframe
-                src={enhancedResumeUrl}
+              <object
+                data={enhancedResumeUrl}
+                type="application/pdf"
                 className="w-full h-96 border-0 rounded"
-                title="Resume Preview"
-              />
+              >
+                <div className="flex flex-col items-center justify-center h-full bg-gray-100 text-gray-500">
+                  <p>Preview not supported in this browser.</p>
+                  <a href={enhancedResumeUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                    Click here to view PDF
+                  </a>
+                </div>
+              </object>
               <div className="mt-2 flex items-center justify-between">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Resume has been enhanced for this position

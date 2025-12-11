@@ -1,17 +1,42 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <style>
-    body { width: 300px; padding: 15px; font-family: sans-serif; }
-    button { width: 100%; padding: 10px; background: #0073b1; color: white; border: none; cursor: pointer; border-radius: 4px; }
-    button:hover { background: #006097; }
-    .status { margin-top: 10px; font-size: 12px; color: #666; }
+    body {
+      width: 300px;
+      padding: 15px;
+      font-family: sans-serif;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #0073b1;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background: #006097;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #666;
+    }
   </style>
 </head>
+
 <body>
   <h3>JobAI Assistant</h3>
-  <button id="extractBtn">Analyze Job</button>
+  <button id="extractBtn" style="margin-bottom: 8px;">Analyze Page (Text)</button>
+  <button id="screenshotBtn" style="background: #e76f51;">📸 Screenshot & Analyze</button>
   <div class="status" id="status"></div>
   <script src="popup.js"></script>
 </body>
+
 </html>

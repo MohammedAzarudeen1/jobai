@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSettings } from '@/lib/storage'
-import { generateCoverLetter } from '@/lib/ai'
+import { generateCoverLetterAndSubject } from '@/lib/ai'
 import { enhanceResumePDF } from '@/lib/pdf'
 import { sendEmail } from '@/lib/email'
-import { deleteFromCloudinary } from '@/lib/cloudinary'
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,31 +35,30 @@ export async function POST(request: NextRequest) {
     // Use provided cover letter and resume URL if available (from preview), otherwise generate
     let finalCoverLetter = coverLetter
     let finalResumeUrl = enhancedResumeUrl
+    let emailSubject = subject
 
-    if (!finalCoverLetter) {
-      // Step 1: Generate cover letter using AI
-      console.log('Generating cover letter...')
-      finalCoverLetter = await generateCoverLetter(jobDescription)
+    if (!finalCoverLetter || !emailSubject) {
+      // OPTIMIZED: Generate both in ONE AI call if either is missing
+      console.log('Generating cover letter and subject in single AI call...')
+      const { coverLetter: generatedLetter, subject: generatedSubject } = await generateCoverLetterAndSubject(jobDescription)
+      if (!finalCoverLetter) finalCoverLetter = generatedLetter
+      if (!emailSubject) emailSubject = generatedSubject
     }
 
     if (!finalResumeUrl) {
-      // Step 2: Enhance resume PDF and upload to Cloudinary
+      // Step 2: Enhance resume PDF and upload to Cloudinary (if not already done)
       console.log('Enhancing resume...')
-      const enhancedResume = await enhanceResumePDF(jobDescription)
-      finalResumeUrl = enhancedResume.url
+      try {
+        const enhancedResume = await enhanceResumePDF(jobDescription)
+        finalResumeUrl = enhancedResume.url
+      } catch (e) {
+        console.error("Resume enhancement failed, using original.", e)
+        finalResumeUrl = settings.resumeUrl
+      }
     }
 
-    // Step 3: Download enhanced resume for email attachment
-    const resumeResponse = await fetch(finalResumeUrl)
-    if (!resumeResponse.ok) {
-      throw new Error('Failed to fetch enhanced resume')
-    }
-    const resumeBuffer = await resumeResponse.arrayBuffer()
-
-    // Step 4: Send email with enhanced resume
-    console.log('Sending email...')
-    const emailSubject = subject || `Application for Position - ${new Date().toLocaleDateString()}`
-    
+    // Step 3: Send email with enhanced resume URL (Stream directly)
+    console.log(`Sending email with resume from: ${finalResumeUrl}`)
     await sendEmail(
       settings,
       recruiterEmail,
@@ -69,15 +67,10 @@ export async function POST(request: NextRequest) {
       [
         {
           filename: 'resume.pdf',
-          content: Buffer.from(resumeBuffer),
+          path: finalResumeUrl,
         },
       ]
     )
-
-    // Clean up enhanced resume from Cloudinary after sending (optional)
-    if (enhancedResumePublicId) {
-      // await deleteFromCloudinary(enhancedResumePublicId)
-    }
 
     return NextResponse.json({
       success: true,
@@ -91,4 +84,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

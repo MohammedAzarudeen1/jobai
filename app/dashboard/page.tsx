@@ -15,6 +15,12 @@ function DashboardContent() {
 
   const searchParams = useSearchParams()
 
+  const [initialData, setInitialData] = useState({
+    description: '',
+    email: '',
+    subject: ''
+  })
+
   useEffect(() => {
     setMounted(true)
     // Load settings
@@ -25,19 +31,41 @@ function DashboardContent() {
       })
       .catch(err => console.error('Error loading settings:', err))
 
-    // Check for incoming job data from extension
+    // Handle Image Analysis Result (Screenshot flow)
+    const analysisId = searchParams.get('analysisId')
+    if (analysisId) {
+      // Fetch the cached result
+      fetch(`/api/get-analysis?id=${analysisId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setInitialData({
+              description: data.description || '',
+              email: data.emails?.[0] || '',
+              subject: 'Application for role (from screenshot)'
+            })
+            setActiveTab('apply')
+
+            // Trigger Tailor Resume Notification (Simulated for now)
+            // "I see you used a screenshot. Want to tailor your resume?"
+            // This logic lives in JobApplicationForm or here.
+          }
+        })
+        .catch(err => console.error('Error fetching analysis:', err))
+      return
+    }
+
+    // Check for incoming job data from extension (Text flow)
     const desc = searchParams.get('desc')
     if (desc) {
+      setInitialData({
+        description: desc,
+        email: searchParams.get('email') || '',
+        subject: searchParams.get('subject') || ''
+      })
       setActiveTab('apply')
     }
   }, [searchParams])
-
-  // Initial data for job application if coming from extension
-  const initialJobData = {
-    description: searchParams.get('desc') || '',
-    email: searchParams.get('email') || '',
-    subject: searchParams.get('subject') || ''
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -93,7 +121,7 @@ function DashboardContent() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {mounted && activeTab === 'settings' && <SettingsForm settings={settings} onSettingsUpdate={setSettings} />}
-        {mounted && activeTab === 'apply' && <JobApplicationForm settings={settings} initialData={initialJobData} />}
+        {mounted && activeTab === 'apply' && <JobApplicationForm settings={settings} initialData={initialData} />}
         {mounted && activeTab === 'search' && <JobSearchForm />}
         {mounted && activeTab === 'auto' && <AutoApplyForm settings={settings} />}
       </main>

@@ -21,6 +21,11 @@
    # Groq AI API Key
    GROQ_API_KEY=your_groq_api_key
    
+   # Google Generative AI API Key (for PDF parsing & fallback AI)
+   GOOGLE_GENERATIVE_AI_API_KEY=your_google_generative_ai_api_key
+   # (Optional) Custom base URL for API calls (e.g., for proxies)
+   # GOOGLE_GENERATIVE_AI_BASE_URL=https://your-proxy.com/google
+   
    # Encryption Key (IMPORTANT for production)
    # Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    ENCRYPTION_KEY=your-64-character-hex-string-here
@@ -44,6 +49,14 @@
    - Go to [Groq Console](https://console.groq.com/)
    - Sign up and create an API key
    - Copy the API key
+   
+   **Google Generative AI (Free tier available, paid plans scale):**
+   - Go to [Google AI Studio](https://aistudio.google.com/)
+   - Sign in with your Google account
+   - Click "Get API key" in the left sidebar
+   - Create a new API key (or use existing)
+   - Copy the API key to your `.env.local`
+   - **Note:** Model availability (e.g., `gemini-2.5-flash`, `gemini-1.5-flash`) may vary by region and account. The app automatically tries multiple models and falls back gracefully if a model is unavailable.
 
 4. **Run the Development Server**
    ```bash
@@ -94,5 +107,7 @@ The app will:
 - **MongoDB connection errors**: Check your connection string and ensure your IP is whitelisted
 - **Cloudinary upload fails**: Verify your API credentials in `.env.local`
 - **Groq AI not working**: Check your API key or the app will use template-based generation
+- **Google Generative AI model not found**: The app automatically tries `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-1.5-flash-latest`, and `gemini-1.5-flash` in order. If none are available for your account/region, check [Google AI Studio](https://aistudio.google.com/) for available models and your API key status.
 - **Email not sending**: Check your SMTP settings and ensure you're using an App Password for Gmail
 - **Resume upload fails**: Ensure the file is a PDF and under 10MB
+- **PDF parsing fails**: Falls back to local parser if Gemini is unavailable; ensure your resume PDF is readable
