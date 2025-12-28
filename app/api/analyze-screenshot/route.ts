@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createWorker } from 'tesseract.js'
 import { analysisCache } from '@/lib/analysisCache'
-import path from 'path'
-import fs from 'fs'
+import { analyzeJobScreenshotWithGemini } from '@/lib/ai'
 
 export async function POST(request: NextRequest) {
     try {
@@ -12,31 +11,60 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'No image provided' }, { status: 400 })
         }
 
-        console.log('📸 Received screenshot for analysis...')
+        console.log('📸 [API] Analyzing screenshot with AI...')
 
-        // Decode base64 
-        const base64Data = image.replace(/^data:image\/jpeg;base64,/, "");
-        const buffer = Buffer.from(base64Data, 'base64');
+        // Fetch resume text for better analysis (if available)
+        const { getSettings } = await import('@/lib/storage')
+        const settings = await getSettings()
+        const resumeText = settings?.resumeText || ""
 
-        // Use Tesseract.js for OCR
-        const worker = await createWorker('eng');
-        const ret = await worker.recognize(buffer);
-        const text = ret.data.text;
-        await worker.terminate();
+        let description = ""
+        let emails: string[] = []
+        let coverLetter = ""
+        let subject = ""
+        let method = "Gemini Vision"
 
-        console.log('✅ OCR Text Length:', text.length)
+        try {
+            // 1. Primary Method: Gemini Vision (Context Aware)
+            const aiResult = await analyzeJobScreenshotWithGemini(image, resumeText)
+            description = aiResult.description
+            emails = aiResult.emails
+            coverLetter = aiResult.coverLetter || ""
+            subject = aiResult.subject || ""
 
-        // Extract basic info using Regex (AI would be better, but we do basic first)
-        const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
-        const emails = text.match(emailRegex) || []
+            // Fallback check: if Gemini returned empty, try OCR
+            if (!description || description.length < 50) {
+                throw new Error("Gemini returned insufficient text")
+            }
+        } catch (e) {
+            console.warn('⚠️ [API] Gemini Vision failed or gave poor result, falling back to OCR...', e)
+            method = "Tesseract OCR (Fallback)"
+
+            // 2. Fallback Method: Tesseract.js (Basic OCR)
+            const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+            const buffer = Buffer.from(base64Data, 'base64');
+            const worker = await createWorker('eng');
+            const ret = await worker.recognize(buffer);
+            description = ret.data.text;
+            await worker.terminate();
+
+            // Basic regex for emails in fallback mode
+            const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
+            emails = description.match(emailRegex) || []
+        }
+
+        console.log(`✅ [API] Analysis finished using ${method}. Text Length: ${description.length}`)
 
         const resultId = Math.random().toString(36).substring(7)
 
         const analysisData = {
             id: resultId,
-            description: text, // The full text from the screenshot
+            description: description,
             emails: emails,
-            createdAt: new Date().toISOString()
+            coverLetter: coverLetter,
+            subject: subject,
+            createdAt: new Date().toISOString(),
+            method: method
         }
 
         // Store in cache
@@ -45,11 +73,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
             success: true,
             id: resultId,
-            textLength: text.length
+            data: analysisData
         })
 
     } catch (error: any) {
-        console.error('OCR Error:', error)
+        console.error('Screenshot Analysis Error:', error)
         return NextResponse.json({ success: false, error: error.message }, { status: 500 })
     }
 }

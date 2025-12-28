@@ -7,10 +7,11 @@ import SettingsForm from '@/components/SettingsForm'
 import JobApplicationForm from '@/components/JobApplicationForm'
 import JobSearchForm from '@/components/JobSearchForm'
 import AutoApplyForm from '@/components/AutoApplyForm'
+import SmartAutomationForm from '@/components/SmartAutomationForm'
 
 function DashboardContent() {
   const [mounted, setMounted] = useState(false)
-  const [activeTab, setActiveTab] = useState<'settings' | 'apply' | 'search' | 'auto'>('settings')
+  const [activeTab, setActiveTab] = useState<'settings' | 'apply' | 'search' | 'auto' | 'smart'>('settings')
   const [settings, setSettings] = useState<any>(null)
 
   const searchParams = useSearchParams()
@@ -18,7 +19,8 @@ function DashboardContent() {
   const [initialData, setInitialData] = useState({
     description: '',
     email: '',
-    subject: ''
+    subject: '',
+    coverLetter: ''
   })
 
   useEffect(() => {
@@ -42,7 +44,8 @@ function DashboardContent() {
             setInitialData({
               description: data.description || '',
               email: data.emails?.[0] || '',
-              subject: 'Application for role (from screenshot)'
+              subject: data.subject || 'Application for role (from screenshot)',
+              coverLetter: data.coverLetter || ''
             })
             setActiveTab('apply')
 
@@ -61,7 +64,8 @@ function DashboardContent() {
       setInitialData({
         description: desc,
         email: searchParams.get('email') || '',
-        subject: searchParams.get('subject') || ''
+        subject: searchParams.get('subject') || '',
+        coverLetter: ''
       })
       setActiveTab('apply')
     }
@@ -88,13 +92,22 @@ function DashboardContent() {
                 Find Jobs
               </button>
               <button
-                onClick={() => setActiveTab('auto')}
-                className={`px-4 py-2 rounded-md font-medium transition ${activeTab === 'auto'
+                onClick={() => setActiveTab('smart')}
+                className={`px-4 py-2 rounded-md font-medium transition ${activeTab === 'smart'
                   ? 'bg-purple-600 text-white'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
               >
-                ⚡ Auto-Apply
+                🤖 Smart Auto
+              </button>
+              <button
+                onClick={() => setActiveTab('auto')}
+                className={`px-4 py-2 rounded-md font-medium transition ${activeTab === 'auto'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+              >
+                ⚡ Basic Auto
               </button>
               <button
                 onClick={() => setActiveTab('apply')}
@@ -123,6 +136,7 @@ function DashboardContent() {
         {mounted && activeTab === 'settings' && <SettingsForm settings={settings} onSettingsUpdate={setSettings} />}
         {mounted && activeTab === 'apply' && <JobApplicationForm settings={settings} initialData={initialData} />}
         {mounted && activeTab === 'search' && <JobSearchForm />}
+        {mounted && activeTab === 'smart' && <SmartAutomationForm settings={settings} />}
         {mounted && activeTab === 'auto' && <AutoApplyForm settings={settings} />}
       </main>
     </div>

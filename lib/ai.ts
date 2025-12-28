@@ -189,6 +189,83 @@ export async function parseResumeWithGemini(pdfUrl: string): Promise<string> {
   }
 }
 
+// NEW: Use Gemini Vision to analyze Job Posting Screenshots
+export async function analyzeJobScreenshotWithGemini(imageBase64: string, resumeText?: string): Promise<{ description: string; emails: string[]; coverLetter?: string; subject?: string }> {
+  console.log('\n📸 [AI-AGENT] TASK: ANALYZE JOB SCREENSHOT (Best Practice: generateObject + Uint8Array)')
+
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    console.warn("⚠️ [AI-AGENT] SKIPPED: No Google Key for Vision Analysis.")
+    return { description: "", emails: [] }
+  }
+
+  try {
+    const google = await getGoogleProvider()
+    const { generateObject } = await import('ai')
+    const { z } = await import('zod')
+
+    // Clean and convert base64 to Uint8Array (Best Practice for server-side image parts)
+    const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '')
+    const imageUint8 = new Uint8Array(Buffer.from(cleanBase64, 'base64'))
+
+    const schema = z.object({
+      description: z.string().describe('The full job description extracted from the screenshot'),
+      emails: z.array(z.string()).describe('List of any contact, recruiter or company emails found'),
+      coverLetter: z.string().optional().describe('Professional cover letter generated based on the resume'),
+      subject: z.string().optional().describe('Professional email subject line generated based on the resume')
+    })
+
+    let promptText = 'Analyze this job posting screenshot. Extract the job description and contact emails.'
+
+    if (resumeText) {
+      promptText += `\n\nBased on the applicant's resume provided, generate a professional cover letter and email subject line.\n\nApplicant's Resume:\n${resumeText}`
+    }
+
+    const candidates = [
+      'gemini-2.0-flash',
+      'gemini-2.0-flash-exp',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-flash'
+    ]
+
+    for (const modelId of candidates) {
+      try {
+        console.log(`🔁 [AI-AGENT] Trying Google model for Object Generation: ${modelId}`)
+
+        const result = await generateObject({
+          model: google(modelId),
+          schema: schema,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: promptText },
+                {
+                  type: 'image',
+                  image: imageUint8
+                }
+              ]
+            }
+          ],
+          temperature: 0.2
+        })
+
+        if (result.object) {
+          console.log(`✅ [AI-AGENT] SUCCESS: Gemini (${modelId}) analyzed screenshot using generateObject.`)
+          return result.object
+        }
+      } catch (e: any) {
+        console.warn(`⚠️ [AI-AGENT] Model ${modelId} failed: ${e.message}`)
+      }
+    }
+
+    throw new Error('All model candidates failed for screenshot analysis')
+
+  } catch (e) {
+    console.error("❌ [AI-AGENT] SCREENSHOT ANALYSIS FAILED:", e)
+    return { description: "", emails: [] }
+  }
+}
+
 function generateTemplateBased(
   jobDescription: string,
   resumeText?: string

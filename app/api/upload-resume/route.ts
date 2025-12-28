@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     // Get existing settings
     const existingSettings = await getSettings()
-    
+
     // Delete old resume from Cloudinary if exists
     if (existingSettings?.resumePublicId) {
       try {
@@ -49,10 +49,21 @@ export async function POST(request: NextRequest) {
       fromEmail: '',
       fromName: '',
     }
-    
+
     settings.resumeUrl = url
     settings.resumePublicId = publicId
     await saveSettings(settings)
+
+    // PROACTIVE: Parse the resume text now so it's cached for future use
+    console.log('🤖 [API] Proactively parsing resume text for cache...')
+    const { parseResumeWithGemini } = await import('@/lib/ai')
+    const { cacheResumeText } = await import('@/lib/storage')
+    try {
+      const text = await parseResumeWithGemini(url)
+      if (text) await cacheResumeText(text)
+    } catch (e) {
+      console.error('Failed to pre-cache resume text:', e)
+    }
 
     return NextResponse.json({
       success: true,

@@ -10,6 +10,7 @@ interface JobApplicationFormProps {
     description: string
     email: string
     subject: string
+    coverLetter?: string
   }
 }
 
@@ -22,15 +23,26 @@ export default function JobApplicationForm({ settings, initialData }: JobApplica
 
   // Update form if initialData changes (e.g. navigation)
   useEffect(() => {
-    if (initialData && (initialData.description || initialData.email)) {
+    if (initialData) {
       setFormData(prev => ({
         ...prev,
         jobDescription: initialData.description || prev.jobDescription,
         recruiterEmail: initialData.email || prev.recruiterEmail,
         subject: initialData.subject || prev.subject
       }))
+
+      // If we got a cover letter from a screenshot analysis, pre-populate preview state
+      if (initialData.coverLetter) {
+        setPreviewData({
+          coverLetter: initialData.coverLetter,
+          enhancedResumeUrl: settings?.resumeUrl || '', // Fallback to original if not enhanced yet
+          enhancedResumePublicId: '',
+          emailSubject: initialData.subject || ''
+        })
+        // We don't automatically show preview modal, but the data is ready
+      }
     }
-  }, [initialData])
+  }, [initialData, settings])
 
   const [submitting, setSubmitting] = useState(false)
   const [previewing, setPreviewing] = useState(false)
@@ -282,6 +294,64 @@ export default function JobApplicationForm({ settings, initialData }: JobApplica
           >
             {previewing ? 'Generating Preview...' : 'Preview Application'}
           </button>
+
+          <label className="flex-1 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-md transition cursor-pointer border-2 border-dashed border-gray-300">
+            <span>📸 Analyze Screenshot</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+
+                setPreviewing(true)
+                setMessage({ type: 'success', text: 'Analyzing screenshot with AI... Please wait.' })
+
+                try {
+                  const reader = new FileReader()
+                  reader.onload = async (event) => {
+                    const base64 = event.target?.result as string
+                    const res = await fetch('/api/analyze-screenshot', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ image: base64 })
+                    })
+                    const data = await res.json()
+
+                    if (data.success) {
+                      const detailData = data.data
+
+                      setFormData({
+                        jobDescription: detailData.description || '',
+                        recruiterEmail: detailData.emails?.[0] || '',
+                        subject: detailData.subject || 'Application for role (from screenshot)',
+                      })
+
+                      if (detailData.coverLetter) {
+                        setPreviewData({
+                          coverLetter: detailData.coverLetter,
+                          enhancedResumeUrl: settings?.resumeUrl || '',
+                          enhancedResumePublicId: '',
+                          emailSubject: detailData.subject || ''
+                        })
+                        setShowPreview(true)
+                      }
+
+                      setMessage({ type: 'success', text: 'AI generated your application from the screenshot! Review it below.' })
+                    } else {
+                      setMessage({ type: 'error', text: data.error || 'Analysis failed' })
+                    }
+                  }
+                  reader.readAsDataURL(file)
+                } catch (err) {
+                  setMessage({ type: 'error', text: 'Error analyzing image' })
+                } finally {
+                  setPreviewing(false)
+                }
+              }}
+            />
+          </label>
         </div>
       </form>
 
@@ -299,6 +369,30 @@ export default function JobApplicationForm({ settings, initialData }: JobApplica
         </p>
       </div>
 
+      {/* Custom Loader Overlay */}
+      {previewing && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl flex flex-col items-center max-w-sm w-full mx-4 border border-gray-100 dark:border-gray-700">
+            <div className="relative w-20 h-20 mb-6">
+              <div className="absolute inset-0 border-4 border-blue-100 dark:border-gray-700 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center text-2xl">
+                🤖
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+              AI-Agent at Work
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 text-center animate-pulse">
+              {formData.jobDescription ? 'Generating your personalized application...' : 'Analyzing screenshot with Gemini Vision...'}
+            </p>
+            <div className="mt-8 w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-blue-600 h-full animate-[loading_2s_ease-in-out_infinite] w-1/3 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Preview Modal */}
       {previewData && (
         <PreviewModal
@@ -315,6 +409,13 @@ export default function JobApplicationForm({ settings, initialData }: JobApplica
           sending={sending}
         />
       )}
+
+      <style jsx>{`
+        @keyframes loading {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(300%); }
+        }
+      `}</style>
     </div>
   )
 }
