@@ -81,10 +81,10 @@ function DashboardContent() {
                 JobAI
               </Link>
             </div>
-            <div className="flex space-x-4 items-center">
+            <div className="flex space-x-4 items-center overflow-x-auto pb-2 -mb-2 scrollbar-hide md:overflow-visible">
               <button
                 onClick={() => setActiveTab('search')}
-                className={`px-4 py-2 rounded-md font-medium transition ${activeTab === 'search'
+                className={`px-4 py-2 rounded-md font-medium transition whitespace-nowrap ${activeTab === 'search'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
@@ -93,7 +93,7 @@ function DashboardContent() {
               </button>
               <button
                 onClick={() => setActiveTab('smart')}
-                className={`px-4 py-2 rounded-md font-medium transition ${activeTab === 'smart'
+                className={`px-4 py-2 rounded-md font-medium transition whitespace-nowrap ${activeTab === 'smart'
                   ? 'bg-purple-600 text-white'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
@@ -102,7 +102,7 @@ function DashboardContent() {
               </button>
               <button
                 onClick={() => setActiveTab('auto')}
-                className={`px-4 py-2 rounded-md font-medium transition ${activeTab === 'auto'
+                className={`px-4 py-2 rounded-md font-medium transition whitespace-nowrap ${activeTab === 'auto'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
@@ -111,7 +111,7 @@ function DashboardContent() {
               </button>
               <button
                 onClick={() => setActiveTab('apply')}
-                className={`px-4 py-2 rounded-md font-medium transition ${activeTab === 'apply'
+                className={`px-4 py-2 rounded-md font-medium transition whitespace-nowrap ${activeTab === 'apply'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
@@ -120,7 +120,7 @@ function DashboardContent() {
               </button>
               <button
                 onClick={() => setActiveTab('settings')}
-                className={`px-4 py-2 rounded-md font-medium transition ${activeTab === 'settings'
+                className={`px-4 py-2 rounded-md font-medium transition whitespace-nowrap ${activeTab === 'settings'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}

@@ -177,7 +177,7 @@ export default function SettingsForm({ settings, onSettingsUpdate }: SettingsFor
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
       <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Dashboard Settings</h2>
 
       {message && (

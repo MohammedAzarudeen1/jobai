@@ -224,7 +224,7 @@ export default function JobApplicationForm({ settings, initialData }: JobApplica
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
       <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
         Apply to Job
       </h2>
@@ -286,16 +286,16 @@ export default function JobApplicationForm({ settings, initialData }: JobApplica
           />
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             type="submit"
             disabled={previewing || submitting}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-md transition disabled:opacity-50"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-md transition disabled:opacity-50 text-center"
           >
             {previewing ? 'Generating Preview...' : 'Preview Application'}
           </button>
 
-          <label className="flex-1 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-md transition cursor-pointer border-2 border-dashed border-gray-300">
+          <label className="flex-1 flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-md transition cursor-pointer border-2 border-dashed border-gray-300 text-center">
             <span>📸 Analyze Screenshot</span>
             <input
               type="file"
