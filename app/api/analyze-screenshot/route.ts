@@ -25,19 +25,17 @@ export async function POST(request: NextRequest) {
         let method = "Gemini Vision"
 
         try {
-            // 1. Primary Method: Gemini Vision (Context Aware)
-            const aiResult = await analyzeJobScreenshotWithGemini(image, resumeText)
+            // 1. Primary Method: Gemini Vision (Context Aware Extraction)
+            const aiResult = await analyzeJobScreenshotWithGemini(image)
             description = aiResult.description
             emails = aiResult.emails
-            coverLetter = aiResult.coverLetter || ""
-            subject = aiResult.subject || ""
 
             // Fallback check: if Gemini returned empty, try OCR
             if (!description || description.length < 50) {
                 throw new Error("Gemini returned insufficient text")
             }
         } catch (e) {
-            console.warn('⚠️ [API] Gemini Vision failed or gave poor result, falling back to OCR...', e)
+            console.warn('⚠️ [API] Gemini Vision extraction failed or gave poor result, falling back to OCR...', e)
             method = "Tesseract OCR (Fallback)"
 
             // 2. Fallback Method: Tesseract.js (Basic OCR)
@@ -53,7 +51,16 @@ export async function POST(request: NextRequest) {
             emails = description.match(emailRegex) || []
         }
 
-        console.log(`✅ [API] Analysis finished using ${method}. Text Length: ${description.length}`)
+        console.log(`✅ [API] Extraction finished using ${method}. Text Length: ${description.length}`)
+
+        // 3. Writing Part: Use Groq (via generateCoverLetterAndSubject) for fast, high-quality generation
+        if (resumeText && description) {
+            console.log('✍️ [API] Generating cover letter and subject via Groq...')
+            const { generateCoverLetterAndSubject } = await import('@/lib/ai')
+            const generation = await generateCoverLetterAndSubject(description, resumeText)
+            coverLetter = generation.coverLetter
+            subject = generation.subject
+        }
 
         const resultId = Math.random().toString(36).substring(7)
 

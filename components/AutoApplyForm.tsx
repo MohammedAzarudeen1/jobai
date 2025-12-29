@@ -381,6 +381,42 @@ export default function AutoApplyForm({ settings }: { settings: any }) {
                     ⚠️ Make sure you have configured Settings (SMTP email + Resume) before applying.
                 </p>
             </div>
+
+            {/* Premium Loader Overlay */}
+            {(isSearching || isAnalyzing || isApplying) && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+                    <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl flex flex-col items-center max-w-sm w-full mx-4 border border-gray-100 dark:border-gray-700">
+                        <div className="relative w-20 h-20 mb-6">
+                            <div className="absolute inset-0 border-4 border-blue-100 dark:border-gray-700 rounded-full"></div>
+                            <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+                            <div className="absolute inset-0 flex items-center justify-center text-2xl">
+                                {isSearching ? '🔍' : isAnalyzing ? '🧠' : '⚡'}
+                            </div>
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+                            {isSearching ? 'Searching Jobs' : isAnalyzing ? 'AI Match Analysis' : 'Auto-Applying'}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 text-center animate-pulse text-sm">
+                            {isSearching ? 'Crawling LinkedIn for your next opportunity...' :
+                                isAnalyzing ? `Analyzing fit for ${progress.current}/${progress.total} jobs...` :
+                                    `Sending application ${progress.current}/${progress.total}...`}
+                        </p>
+                        <div className="mt-8 w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                            <div
+                                className="bg-blue-600 h-full transition-all duration-500 rounded-full"
+                                style={{ width: `${(progress.total > 0 ? (progress.current / progress.total) * 100 : 33)}%` }}
+                            ></div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <style jsx>{`
+                @keyframes loading {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(300%); }
+                }
+            `}</style>
         </div>
     )
 }

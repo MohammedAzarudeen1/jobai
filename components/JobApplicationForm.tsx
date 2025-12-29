@@ -309,43 +309,50 @@ export default function JobApplicationForm({ settings, initialData }: JobApplica
                 setMessage({ type: 'success', text: 'Analyzing screenshot with AI... Please wait.' })
 
                 try {
-                  const reader = new FileReader()
-                  reader.onload = async (event) => {
-                    const base64 = event.target?.result as string
-                    const res = await fetch('/api/analyze-screenshot', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ image: base64 })
+                  const readFileAsDataURL = (file: File): Promise<string> => {
+                    return new Promise((resolve, reject) => {
+                      const reader = new FileReader()
+                      reader.onload = (event) => resolve(event.target?.result as string)
+                      reader.onerror = (err) => reject(err)
+                      reader.readAsDataURL(file)
                     })
-                    const data = await res.json()
-
-                    if (data.success) {
-                      const detailData = data.data
-
-                      setFormData({
-                        jobDescription: detailData.description || '',
-                        recruiterEmail: detailData.emails?.[0] || '',
-                        subject: detailData.subject || 'Application for role (from screenshot)',
-                      })
-
-                      if (detailData.coverLetter) {
-                        setPreviewData({
-                          coverLetter: detailData.coverLetter,
-                          enhancedResumeUrl: settings?.resumeUrl || '',
-                          enhancedResumePublicId: '',
-                          emailSubject: detailData.subject || ''
-                        })
-                        setShowPreview(true)
-                      }
-
-                      setMessage({ type: 'success', text: 'AI generated your application from the screenshot! Review it below.' })
-                    } else {
-                      setMessage({ type: 'error', text: data.error || 'Analysis failed' })
-                    }
                   }
-                  reader.readAsDataURL(file)
+
+                  const base64 = await readFileAsDataURL(file)
+                  const res = await fetch('/api/analyze-screenshot', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64 })
+                  })
+
+                  const data = await res.json()
+
+                  if (data.success) {
+                    const detailData = data.data
+
+                    setFormData({
+                      jobDescription: detailData.description || '',
+                      recruiterEmail: detailData.emails?.[0] || '',
+                      subject: detailData.subject || 'Application for role (from screenshot)',
+                    })
+
+                    if (detailData.coverLetter) {
+                      setPreviewData({
+                        coverLetter: detailData.coverLetter,
+                        enhancedResumeUrl: settings?.resumeUrl || '',
+                        enhancedResumePublicId: '',
+                        emailSubject: detailData.subject || ''
+                      })
+                      setShowPreview(true)
+                    }
+
+                    setMessage({ type: 'success', text: 'AI generated your application from the screenshot! Review it below.' })
+                  } else {
+                    setMessage({ type: 'error', text: data.error || 'Analysis failed' })
+                  }
                 } catch (err) {
-                  setMessage({ type: 'error', text: 'Error analyzing image' })
+                  console.error('Extraction Error:', err)
+                  setMessage({ type: 'error', text: 'Error analyzing image. Please try again.' })
                 } finally {
                   setPreviewing(false)
                 }

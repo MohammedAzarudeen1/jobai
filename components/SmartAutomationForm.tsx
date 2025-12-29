@@ -33,7 +33,7 @@ interface Job {
 
 export default function SmartAutomationForm({ settings }: { settings: any }) {
   const [activeTab, setActiveTab] = useState<'instant' | 'scheduled'>('instant')
-  
+
   // Instant automation state
   const [searchParams, setSearchParams] = useState({
     keywords: '',
@@ -46,7 +46,7 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
   const [isSearching, setIsSearching] = useState(false)
   const [isApplying, setIsApplying] = useState(false)
   const [progress, setProgress] = useState({ current: 0, total: 0 })
-  
+
   // Scheduled automation state
   const [schedules, setSchedules] = useState<AutomationSchedule[]>([])
   const [showScheduleForm, setShowScheduleForm] = useState(false)
@@ -59,7 +59,7 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
     frequency: 'daily' as const,
     customMessage: ''
   })
-  
+
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
 
   // Load schedules on component mount
@@ -248,7 +248,7 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
       const data = await response.json()
 
       if (data.success) {
-        setSchedules(prev => prev.map(s => 
+        setSchedules(prev => prev.map(s =>
           s.id === scheduleId ? data.schedule : s
         ))
         setMessage({ type: 'success', text: data.message })
@@ -261,7 +261,7 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
   const handleRunSchedule = async (scheduleId: string) => {
     try {
       setMessage({ type: 'info', text: 'Running scheduled automation...' })
-      
+
       const response = await fetch('/api/schedule-automation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -274,7 +274,7 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
       const data = await response.json()
 
       if (data.success) {
-        setSchedules(prev => prev.map(s => 
+        setSchedules(prev => prev.map(s =>
           s.id === scheduleId ? data.schedule : s
         ))
         setMessage({ type: 'success', text: data.message })
@@ -299,11 +299,10 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
       </p>
 
       {message && (
-        <div className={`mb-4 p-4 rounded-lg ${
-          message.type === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
-          message.type === 'error' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100' :
-          'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
-        }`}>
+        <div className={`mb-4 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
+            message.type === 'error' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100' :
+              'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
+          }`}>
           {message.text}
         </div>
       )}
@@ -312,21 +311,19 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
       <div className="flex mb-6 border-b border-gray-200 dark:border-gray-700">
         <button
           onClick={() => setActiveTab('instant')}
-          className={`px-4 py-2 font-medium ${
-            activeTab === 'instant'
+          className={`px-4 py-2 font-medium ${activeTab === 'instant'
               ? 'text-blue-600 border-b-2 border-blue-600'
               : 'text-gray-500 hover:text-gray-700'
-          }`}
+            }`}
         >
           ⚡ Instant Automation
         </button>
         <button
           onClick={() => setActiveTab('scheduled')}
-          className={`px-4 py-2 font-medium ${
-            activeTab === 'scheduled'
+          className={`px-4 py-2 font-medium ${activeTab === 'scheduled'
               ? 'text-blue-600 border-b-2 border-blue-600'
               : 'text-gray-500 hover:text-gray-700'
-          }`}
+            }`}
         >
           📅 Scheduled Automation
         </button>
@@ -353,7 +350,7 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
                 className="px-4 py-3 border border-gray-300 rounded-lg dark:bg-gray-600 dark:border-gray-500 dark:text-white"
               />
             </div>
-            
+
             <div className="grid gap-4 md:grid-cols-3 mt-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -422,12 +419,11 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
               </h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {jobs.slice(0, 10).map(job => (
-                  <div key={job.id} className={`p-4 rounded-lg border ${
-                    job.status === 'sent' ? 'bg-green-50 border-green-300' :
-                    job.status === 'failed' ? 'bg-red-50 border-red-300' :
-                    job.status === 'ready' ? 'bg-white border-gray-200' :
-                    'bg-gray-50 border-gray-200'
-                  }`}>
+                  <div key={job.id} className={`p-4 rounded-lg border ${job.status === 'sent' ? 'bg-green-50 border-green-300' :
+                      job.status === 'failed' ? 'bg-red-50 border-red-300' :
+                        job.status === 'ready' ? 'bg-white border-gray-200' :
+                          'bg-gray-50 border-gray-200'
+                    }`}>
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="font-bold text-gray-900">{job.title}</div>
@@ -442,16 +438,15 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
                           </div>
                         )}
                       </div>
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        job.status === 'sent' ? 'bg-green-200 text-green-800' :
-                        job.status === 'failed' ? 'bg-red-200 text-red-800' :
-                        job.status === 'ready' ? 'bg-blue-200 text-blue-800' :
-                        'bg-gray-200 text-gray-600'
-                      }`}>
+                      <span className={`px-2 py-1 rounded text-xs ${job.status === 'sent' ? 'bg-green-200 text-green-800' :
+                          job.status === 'failed' ? 'bg-red-200 text-red-800' :
+                            job.status === 'ready' ? 'bg-blue-200 text-blue-800' :
+                              'bg-gray-200 text-gray-600'
+                        }`}>
                         {job.status === 'sent' ? '✅ Sent' :
-                         job.status === 'failed' ? '❌ Failed' :
-                         job.status === 'ready' ? '🟢 Ready' :
-                         '⚪ No Email'}
+                          job.status === 'failed' ? '❌ Failed' :
+                            job.status === 'ready' ? '🟢 Ready' :
+                              '⚪ No Email'}
                       </span>
                     </div>
                   </div>
@@ -466,7 +461,7 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
         <div className="space-y-6">
           {/* Automation Scheduler */}
           <AutomationScheduler />
-          
+
           {/* Create Schedule Button */}
           <div className="flex justify-between items-center">
             <h3 className="font-semibold text-gray-900 dark:text-white">Automation Schedules</h3>
@@ -514,7 +509,7 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
                   <option value="weekly">Weekly</option>
                 </select>
               </div>
-              
+
               <div className="grid gap-4 md:grid-cols-2 mt-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -576,9 +571,8 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-gray-900 dark:text-white">{schedule.name}</h4>
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          schedule.enabled ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-600'
-                        }`}>
+                        <span className={`px-2 py-1 rounded text-xs ${schedule.enabled ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-600'
+                          }`}>
                           {schedule.enabled ? '🟢 Active' : '⚪ Paused'}
                         </span>
                       </div>
@@ -601,11 +595,10 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
                       </button>
                       <button
                         onClick={() => handleToggleSchedule(schedule.id)}
-                        className={`px-3 py-1 rounded text-sm transition ${
-                          schedule.enabled 
-                            ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
+                        className={`px-3 py-1 rounded text-sm transition ${schedule.enabled
+                            ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
                             : 'bg-green-600 hover:bg-green-700 text-white'
-                        }`}
+                          }`}
                       >
                         {schedule.enabled ? 'Pause' : 'Enable'}
                       </button>
@@ -618,17 +611,36 @@ export default function SmartAutomationForm({ settings }: { settings: any }) {
         </div>
       )}
 
-      {/* Instructions */}
-      <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-        <h4 className="font-bold text-blue-800 dark:text-blue-200 mb-2">🤖 Smart Automation Features:</h4>
-        <ul className="list-disc ml-4 text-sm text-gray-700 dark:text-gray-300 space-y-1">
-          <li><strong>Multi-Source Search:</strong> Searches Google, LinkedIn API, and job boards</li>
-          <li><strong>AI Matching:</strong> Only applies to jobs that match your skills (configurable threshold)</li>
-          <li><strong>Personalized Applications:</strong> Generates unique cover letters for each job</li>
-          <li><strong>Smart Scheduling:</strong> Set it and forget it - runs automatically</li>
-          <li><strong>Bulk Processing:</strong> Apply to multiple jobs with one click</li>
-        </ul>
-      </div>
+      {/* Premium Loader Overlay */}
+      {(isSearching || isApplying) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl flex flex-col items-center max-w-sm w-full mx-4 border border-gray-100 dark:border-gray-700">
+            <div className="relative w-20 h-20 mb-6">
+              <div className="absolute inset-0 border-4 border-blue-100 dark:border-gray-700 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center text-2xl">
+                {isSearching ? '🤖' : '🚀'}
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+              {isSearching ? 'Intelligent Search' : 'Bulk Applying'}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 text-center animate-pulse text-sm">
+              {isSearching ? 'Scanning multiple sources for high-match opportunities...' : 'Personalizing and sending applications in bulk...'}
+            </p>
+            <div className="mt-8 w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-blue-600 h-full animate-[loading_2s_ease-in-out_infinite] w-1/3 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes loading {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(300%); }
+        }
+      `}</style>
     </div>
   )
 }

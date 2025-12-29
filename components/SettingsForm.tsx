@@ -183,8 +183,8 @@ export default function SettingsForm({ settings, onSettingsUpdate }: SettingsFor
       {message && (
         <div
           className={`mb-4 p-4 rounded ${message.type === 'success'
-              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
             }`}
         >
           {message.text}
@@ -370,6 +370,36 @@ export default function SettingsForm({ settings, onSettingsUpdate }: SettingsFor
           </div>
         </div>
       </div>
+      {/* Premium Loader Overlay */}
+      {(uploading || testing || saving) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl flex flex-col items-center max-w-sm w-full mx-4 border border-gray-100 dark:border-gray-700">
+            <div className="relative w-20 h-20 mb-6">
+              <div className="absolute inset-0 border-4 border-blue-100 dark:border-gray-700 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center text-2xl">
+                {uploading ? '📄' : testing ? '📧' : '💾'}
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+              {uploading ? 'Uploading Resume' : testing ? 'Sending Test Email' : 'Saving Settings'}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 text-center animate-pulse text-sm">
+              {uploading ? 'Our AI is extracting text from your resume to enhance your applications...' : 'Please wait a moment while we process your request...'}
+            </p>
+            <div className="mt-8 w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-blue-600 h-full animate-[loading_2s_ease-in-out_infinite] w-1/3 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes loading {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(300%); }
+        }
+      `}</style>
     </div>
   )
 }

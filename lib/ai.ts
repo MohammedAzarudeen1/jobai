@@ -32,25 +32,29 @@ async function getGoogleProvider() {
 
 // Try multiple model IDs with generateText and return the first successful response.
 async function tryGenerateWithGoogleModels(google: any, generateText: any, modelIds: string[], requestOpts: any) {
+  let lastError: any = null;
   for (const id of modelIds) {
     try {
       console.log(`🔁 [AI-AGENT] Trying Google model: ${id}`)
       const result = await generateText({ model: google(id), ...requestOpts })
       return { result, modelId: id }
     } catch (e: any) {
-      const status = e?.statusCode || e?.data?.status || null
+      lastError = e;
       const body = e?.responseBody || e?.message || ''
       console.warn(`⚠️ [AI-AGENT] Model ${id} failed: ${body?.toString?.() || body}`)
-      // If model not found for this API version, try the next candidate.
-      const notFound = status === 404 || /not found/i.test(body)
-      if (!notFound) {
-        // Non-404 errors should be surfaced.
+
+      // If we hit a quota error, we should try a different model (maybe 1.5 instead of 2.0)
+      const isQuota = /quota|rate limit/i.test(body)
+      const notFound = /not found|404/i.test(body)
+
+      if (!isQuota && !notFound) {
+        // If it's a critical error (invalid API key, etc.), stop and throw
         throw e
       }
-      // else continue to next model
+      // Otherwise, continue to the next model in the list
     }
   }
-  throw new Error('No compatible Google model found from candidates')
+  throw lastError || new Error('No compatible Google model found from candidates')
 }
 
 
@@ -104,7 +108,14 @@ RULES:
       console.log('✅ [AI-AGENT] Using GEMINI for combined generation (fallback)')
       const google = await getGoogleProvider()
       const { generateText } = await import('ai')
-      const candidates = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-1.5-flash-latest', 'gemini-1.5-flash']
+      const candidates = [
+
+        'gemini-2.5-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-8b',
+        'gemini-2.0-flash-exp'
+      ]
       const response = await tryGenerateWithGoogleModels(google, generateText, candidates, { prompt: combinedPrompt, temperature: 0.6 })
       result = response.result
       modelId = response.modelId
@@ -170,9 +181,10 @@ export async function parseResumeWithGemini(pdfUrl: string): Promise<string> {
 
     const candidates = [
       'gemini-2.5-flash',
-      'gemini-2.5-pro',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-flash'
+      'gemini-2.5-flash-lite',
+      'gemini-1.5-flash',
+      'gemini-1.5-flash-8b',
+      'gemini-2.0-flash-exp'
     ]
 
     try {
@@ -189,9 +201,9 @@ export async function parseResumeWithGemini(pdfUrl: string): Promise<string> {
   }
 }
 
-// NEW: Use Gemini Vision to analyze Job Posting Screenshots
-export async function analyzeJobScreenshotWithGemini(imageBase64: string, resumeText?: string): Promise<{ description: string; emails: string[]; coverLetter?: string; subject?: string }> {
-  console.log('\n📸 [AI-AGENT] TASK: ANALYZE JOB SCREENSHOT (Best Practice: generateObject + Uint8Array)')
+// NEW: Use Gemini Vision to analyze Job Posting Screenshots (Strictly for Extraction)
+export async function analyzeJobScreenshotWithGemini(imageBase64: string): Promise<{ description: string; emails: string[] }> {
+  console.log('\n📸 [AI-AGENT] TASK: EXTRACT INFO FROM SCREENSHOT (Gemini Vision)')
 
   if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
     console.warn("⚠️ [AI-AGENT] SKIPPED: No Google Key for Vision Analysis.")
@@ -203,33 +215,27 @@ export async function analyzeJobScreenshotWithGemini(imageBase64: string, resume
     const { generateObject } = await import('ai')
     const { z } = await import('zod')
 
-    // Clean and convert base64 to Uint8Array (Best Practice for server-side image parts)
     const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '')
     const imageUint8 = new Uint8Array(Buffer.from(cleanBase64, 'base64'))
 
     const schema = z.object({
       description: z.string().describe('The full job description extracted from the screenshot'),
       emails: z.array(z.string()).describe('List of any contact, recruiter or company emails found'),
-      coverLetter: z.string().optional().describe('Professional cover letter generated based on the resume'),
-      subject: z.string().optional().describe('Professional email subject line generated based on the resume')
     })
 
-    let promptText = 'Analyze this job posting screenshot. Extract the job description and contact emails.'
-
-    if (resumeText) {
-      promptText += `\n\nBased on the applicant's resume provided, generate a professional cover letter and email subject line.\n\nApplicant's Resume:\n${resumeText}`
-    }
+    const promptText = 'Analyze this job posting screenshot. Extract the full job description and all contact emails found. Do not summarize the description.'
 
     const candidates = [
-      'gemini-2.0-flash',
-      'gemini-2.0-flash-exp',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-flash'
+      'gemini-2.5-flash',
+      'gemini-2.5-flash-lite',
+      'gemini-1.5-flash',
+      'gemini-1.5-flash-8b',
+      'gemini-2.0-flash-exp'
     ]
 
     for (const modelId of candidates) {
       try {
-        console.log(`🔁 [AI-AGENT] Trying Google model for Object Generation: ${modelId}`)
+        console.log(`🔁 [AI-AGENT] Trying Google model for Extraction: ${modelId}`)
 
         const result = await generateObject({
           model: google(modelId),
@@ -246,22 +252,30 @@ export async function analyzeJobScreenshotWithGemini(imageBase64: string, resume
               ]
             }
           ],
-          temperature: 0.2
+          temperature: 0.1
         })
 
         if (result.object) {
-          console.log(`✅ [AI-AGENT] SUCCESS: Gemini (${modelId}) analyzed screenshot using generateObject.`)
+          console.log(`✅ [AI-AGENT] SUCCESS: Gemini (${modelId}) extracted data.`)
           return result.object
         }
       } catch (e: any) {
-        console.warn(`⚠️ [AI-AGENT] Model ${modelId} failed: ${e.message}`)
+        const body = e?.responseBody || e?.message || ''
+        console.warn(`⚠️ [AI-AGENT] Model ${modelId} failed: ${body?.toString?.() || body}`)
+
+        const isQuota = /quota|rate limit/i.test(body)
+        const notFound = /not found|404|not supported/i.test(body)
+
+        if (!isQuota && !notFound) {
+          throw e
+        }
       }
     }
 
-    throw new Error('All model candidates failed for screenshot analysis')
+    throw new Error('All vision mode candidates failed')
 
   } catch (e) {
-    console.error("❌ [AI-AGENT] SCREENSHOT ANALYSIS FAILED:", e)
+    console.error("❌ [AI-AGENT] SCREENSHOT EXTRACTION FAILED:", e)
     return { description: "", emails: [] }
   }
 }
@@ -382,9 +396,10 @@ export async function analyzeJobMatch(
     if (GOOGLE_API_KEY) {
       const candidates = [
         'gemini-2.5-flash',
-        'gemini-2.5-pro',
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-flash'
+        'gemini-2.5-flash-lite',
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-8b',
+        'gemini-2.0-flash-exp'
       ]
       const { result, modelId } = await tryGenerateWithGoogleModels(google, generateText, candidates, { prompt, temperature: 0.1 })
       console.log(`🔹 [AI-AGENT] Analysis used model ${modelId}`)
