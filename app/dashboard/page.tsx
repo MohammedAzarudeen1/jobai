@@ -82,7 +82,7 @@ function DashboardContent() {
               </Link>
             </div>
             <div className="flex space-x-4 items-center overflow-x-auto pb-2 -mb-2 scrollbar-hide md:overflow-visible">
-              <button
+              {/* <button
                 onClick={() => setActiveTab('search')}
                 className={`px-4 py-2 rounded-md font-medium transition whitespace-nowrap ${activeTab === 'search'
                   ? 'bg-blue-600 text-white'
@@ -108,7 +108,7 @@ function DashboardContent() {
                   }`}
               >
                 ⚡ Basic Auto
-              </button>
+              </button> */}
               <button
                 onClick={() => setActiveTab('apply')}
                 className={`px-4 py-2 rounded-md font-medium transition whitespace-nowrap ${activeTab === 'apply'
