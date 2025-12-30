@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface PreviewModalProps {
   isOpen: boolean
@@ -9,7 +9,7 @@ interface PreviewModalProps {
   enhancedResumeUrl: string
   emailSubject: string
   recruiterEmail: string
-  onSend: () => void
+  onSend: (finalCoverLetter: string) => void
   sending: boolean
 }
 
@@ -23,6 +23,14 @@ export default function PreviewModal({
   onSend,
   sending,
 }: PreviewModalProps) {
+  const [editedCoverLetter, setEditedCoverLetter] = useState(coverLetter)
+
+  // Sync state if prop changes (e.g. re-generated)
+  // We utilize a key on the component or just useEffect to reset when opening
+  useEffect(() => {
+    setEditedCoverLetter(coverLetter)
+  }, [coverLetter])
+
   if (!isOpen) return null
 
   return (
@@ -53,13 +61,17 @@ export default function PreviewModal({
           </div>
 
           {/* Cover Letter Preview */}
-          <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Cover Letter</h3>
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 max-h-96 overflow-y-auto">
-              <pre className="whitespace-pre-wrap font-sans text-sm text-gray-800 dark:text-gray-200">
-                {coverLetter}
-              </pre>
+          <div className="flex flex-col h-96">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-semibold text-gray-900 dark:text-white">Cover Letter</h3>
+              <span className="text-xs text-gray-500 dark:text-gray-400">You can edit this before sending</span>
             </div>
+            <textarea
+              value={editedCoverLetter}
+              onChange={(e) => setEditedCoverLetter(e.target.value)}
+              className="flex-1 w-full p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-sm font-sans text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+              spellCheck={false}
+            />
           </div>
 
         </div>
@@ -74,7 +86,7 @@ export default function PreviewModal({
             Cancel
           </button>
           <button
-            onClick={onSend}
+            onClick={() => onSend(editedCoverLetter)}
             disabled={sending}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition disabled:opacity-50"
           >

@@ -166,7 +166,7 @@ export default function JobApplicationForm({ settings, initialData }: JobApplica
     }
   }
 
-  const handleSend = async () => {
+  const handleSend = async (finalCoverLetter?: string) => {
     if (!previewData) return
 
     setSending(true)
@@ -180,7 +180,7 @@ export default function JobApplicationForm({ settings, initialData }: JobApplica
         },
         body: JSON.stringify({
           ...formData,
-          coverLetter: previewData.coverLetter,
+          coverLetter: finalCoverLetter || previewData.coverLetter,
           subject: previewData.emailSubject,
           enhancedResumeUrl: previewData.enhancedResumeUrl,
           enhancedResumePublicId: previewData.enhancedResumePublicId,
