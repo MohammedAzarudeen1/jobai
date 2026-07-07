@@ -13,6 +13,7 @@ export interface UserSettings {
   resumePublicId?: string
   resumeText?: string
   resumeTextCachedAt?: Date
+  baseLatexTemplate?: string
 }
 
 export async function getSettings(): Promise<UserSettings | null> {
@@ -46,6 +47,7 @@ export async function getSettings(): Promise<UserSettings | null> {
       resumePublicId: settings.resumePublicId,
       resumeText: settings.resumeText,
       resumeTextCachedAt: settings.resumeTextCachedAt,
+      baseLatexTemplate: settings.baseLatexTemplate,
     }
   } catch (error) {
     console.error('Error reading settings:', error)
@@ -89,6 +91,7 @@ export async function saveSettings(settings: UserSettings): Promise<void> {
       fromName: settings.fromName,
       resumeUrl: settings.resumeUrl,
       resumePublicId: settings.resumePublicId,
+      baseLatexTemplate: settings.baseLatexTemplate,
     }
     
     if (resumeUrlChanged) {

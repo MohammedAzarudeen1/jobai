@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
       // Preserve existing resume URL if not provided
       resumeUrl: body.resumeUrl || existingSettings?.resumeUrl,
       resumePublicId: body.resumePublicId || existingSettings?.resumePublicId,
+      baseLatexTemplate: body.baseLatexTemplate !== undefined ? body.baseLatexTemplate : existingSettings?.baseLatexTemplate,
     }
 
     await saveSettings(settings)

@@ -16,6 +16,7 @@ export default function SettingsForm({ settings, onSettingsUpdate }: SettingsFor
     smtpPassword: '', // Always start empty for security
     fromEmail: '',
     fromName: '',
+    baseLatexTemplate: '',
   })
   const [resumeFile, setResumeFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
@@ -39,12 +40,19 @@ export default function SettingsForm({ settings, onSettingsUpdate }: SettingsFor
         smtpPassword: '', // Always keep password empty for security
         fromEmail: settings.fromEmail || '',
         fromName: settings.fromName || '',
+        baseLatexTemplate: settings.baseLatexTemplate || '',
       })
       setInitialized(true)
     }
   }, [settings, initialized])
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    })
+  }
+
+  const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -287,6 +295,23 @@ export default function SettingsForm({ settings, onSettingsUpdate }: SettingsFor
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 required
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Base Resume Template (LaTeX)
+              </label>
+              <textarea
+                name="baseLatexTemplate"
+                value={formData.baseLatexTemplate}
+                onChange={handleTextAreaChange}
+                placeholder="\documentclass{article}..."
+                rows={10}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white font-mono text-sm"
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Paste your raw LaTeX resume template here. The AI will fill it dynamically.
+              </p>
             </div>
 
             <div className="flex gap-3">

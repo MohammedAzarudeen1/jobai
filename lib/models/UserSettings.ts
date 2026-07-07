@@ -12,6 +12,7 @@ export interface IUserSettings extends Document {
   resumePublicId?: string
   resumeText?: string  // Cached resume text to avoid re-parsing
   resumeTextCachedAt?: Date  // When resume text was last extracted
+  baseLatexTemplate?: string // Raw LaTeX template for dynamic resume generation
   createdAt: Date
   updatedAt: Date
 }
@@ -61,6 +62,10 @@ const UserSettingsSchema = new Schema<IUserSettings>(
     },
     resumeTextCachedAt: {
       type: Date,
+    },
+    baseLatexTemplate: {
+      type: String,
+      default: '',
     },
   },
   {

@@ -7,7 +7,7 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY || ''
 
 // Lazily create/init the Google provider so we can inject apiKey/baseURL
 let _googleFactory: any = null
-async function getGoogleProvider() {
+export async function getGoogleProvider() {
   if (_googleFactory) return _googleFactory
   try {
     const mod = await import('@ai-sdk/google')
@@ -31,7 +31,7 @@ async function getGoogleProvider() {
 }
 
 // Try multiple model IDs with generateText and return the first successful response.
-async function tryGenerateWithGoogleModels(google: any, generateText: any, modelIds: string[], requestOpts: any) {
+export async function tryGenerateWithGoogleModels(google: any, generateText: any, modelIds: string[], requestOpts: any) {
   let lastError: any = null;
   for (const id of modelIds) {
     try {

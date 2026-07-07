@@ -25,9 +25,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!settings.resumeUrl) {
+    if (!settings.resumeUrl && !enhancedResumeUrl) {
       return NextResponse.json(
-        { success: false, error: 'Resume not found. Please upload a resume first.' },
+        { success: false, error: 'Resume not found. Please provide a generated resume or upload one.' },
         { status: 400 }
       )
     }
